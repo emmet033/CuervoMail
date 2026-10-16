@@ -3,7 +3,11 @@
 # Tiempo de espera (en segundos) para que llegue el animal mensajero
 tiempo-entrega-segundos: 10
 
+# Entidad que entregará la carta (Ejemplos: PARROT, BAT, ALLAY, BEE, PHANTOM)
+# Revisa los nombres exactos del EntityType de Spigot/Bukkit
+entidad-mensajera: "PARROT"
+
 # Configuración del objeto requerido para enviar la carta
 item-requerido:
-  material: "PAPER"   # Nombre exacto del material en Bukkit/Spigot (ej: PAPER, FEATHER, MAP)
-  cantidad: 1         # Cantidad consumida al enviar
+  material: "PAPER"   # Material exacto (PAPER, FEATHER, MAP, etc.)
+  cantidad: 1         # Cantidad consumida
