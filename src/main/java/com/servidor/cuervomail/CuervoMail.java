@@ -1,59 +1,78 @@
 package com.servidor.cuervomail;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class CuervoComando implements CommandExecutor {
+public class CuervoMail extends JavaPlugin {
 
-    private final CuervoMail plugin;
-
-    public CuervoComando(CuervoMail plugin) {
-        this.plugin = plugin;
-    }
+    private int tiempoEntrega;
+    private EntityType tipoEntidad;
+    private Material itemRequerido;
+    private int cantidadRequerida;
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Solo los jugadores pueden ejecutar este comando.");
-            return true;
+    public void onEnable() {
+        saveDefaultConfig();
+        cargarConfiguracion();
+
+        if (getCommand("cuervo") != null) {
+            getCommand("cuervo").setExecutor(new CuervoComando(this));
         }
 
-        Player jugador = (Player) sender;
-
-        if (args.length >= 3 && args[0].equalsIgnoreCase("enviar")) {
-            String nombreDestinatario = args[1];
-            Player destinatario = Bukkit.getPlayer(nombreDestinatario);
-
-            if (destinatario == null || !destinatario.isOnline()) {
-                jugador.sendMessage(ChatColor.RED + "El jugador " + nombreDestinatario + " no está en línea.");
-                return true;
-            }
-
-            StringBuilder mensajeBuilder = new StringBuilder();
-            for (int i = 2; i < args.length; i++) {
-                mensajeBuilder.append(args[i]).append(" ");
-            }
-            String mensaje = mensajeBuilder.toString().trim();
-
-            ItemStack itemRequerido = new ItemStack(plugin.getItemRequerido(), plugin.getCantidadRequerida());
-            if (!jugador.getInventory().containsAtLeast(itemRequerido, plugin.getCantidadRequerida())) {
-                jugador.sendMessage(ChatColor.RED + "Necesitas " + plugin.getCantidadRequerida() + " de " 
-                        + plugin.getItemRequerido().name() + " para enviar una carta.");
-                return true;
-            }
-
-            jugador.getInventory().removeItem(itemRequerido);
-            jugador.sendMessage(ChatColor.GREEN + "¡Carta enviada! El mensajero llegará en " + plugin.getTiempoEntrega() + " segundos.");
-
-            plugin.enviarCarta(destinatario, mensaje);
-            return true;
-        }
-
-        return false;
+        getLogger().info("CuervoMail activado correctamente.");
     }
+
+    public void cargarConfiguracion() {
+        FileConfiguration config = getConfig();
+
+        this.tiempoEntrega = config.getInt("tiempo-entrega-segundos", 10);
+
+        String entidadNombre = config.getString("entidad-mensajera", "PARROT");
+        try {
+            this.tipoEntidad = EntityType.valueOf(entidadNombre.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            getLogger().warning("La entidad '" + entidadNombre + "' no es válida. Usando PARROT por defecto.");
+            this.tipoEntidad = EntityType.PARROT;
+        }
+
+        String materialNombre = config.getString("item-requerido.material", "PAPER");
+        this.itemRequerido = Material.matchMaterial(materialNombre.toUpperCase());
+        if (this.itemRequerido == null) {
+            this.itemRequerido = Material.PAPER;
+        }
+
+        this.cantidadRequerida = config.getInt("item-requerido.cantidad", 1);
+    }
+
+    public void enviarCarta(Player destinatario, String mensaje) {
+        Location locDestino = destinatario.getLocation();
+        long delayTicks = this.tiempoEntrega * 20L;
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (destinatario.isOnline()) {
+                Entity mensajero = locDestino.getWorld().spawnEntity(locDestino.add(0, 1, 0), this.tipoEntidad);
+                mensajero.setCustomName("§6Mensajero Real");
+                mensajero.setCustomNameVisible(true);
+
+                destinatario.sendMessage("§a[CuervoMail] §fHas recibido una carta: §e" + mensaje);
+
+                Bukkit.getScheduler().runTaskLater(this, () -> {
+                    if (mensajero.isValid()) {
+                        mensajero.remove();
+                    }
+                }, 60L);
+            }
+        }, delayTicks);
+    }
+
+    public int getTiempoEntrega() { return tiempoEntrega; }
+    public EntityType getTipoEntidad() { return tipoEntidad; }
+    public Material getItemRequerido() { return itemRequerido; }
+    public int getCantidadRequerida() { return cantidadRequerida; }
 }
