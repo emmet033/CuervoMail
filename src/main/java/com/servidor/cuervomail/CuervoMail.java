@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -110,13 +111,19 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
                     mensajero.setCustomName("§6Mensajero Real");
                     mensajero.setCustomNameVisible(true);
 
+                    // Si es una entidad viva, quitamos la persistencia para que se pueda borrar sin problemas
+                    if (mensajero instanceof LivingEntity) {
+                        ((LivingEntity) mensajero).setRemoveWhenFarAway(true);
+                    }
+
                     destinatario.sendMessage("§a[CuervoMail] §fHas recibido una carta: §e" + mensaje);
 
+                    // Espera 3 segundos (60 ticks) y elimina la entidad
                     Bukkit.getScheduler().runTaskLater(CuervoMail.this, new Runnable() {
                         @Override
                         public void run() {
-                            if (mensajero.isValid()) {
-                                mensajero.remove();
+                            if (mensajero != null) {
+                                mensajero.remove(); // Elimina la entidad del mundo
                             }
                         }
                     }, 60L);
