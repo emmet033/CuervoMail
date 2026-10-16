@@ -10,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -98,9 +97,7 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
     }
 
     public void enviarCarta(Player destinatario, String mensaje) {
-        Location locDestino = destinatario.getLocation().clone();
-        locDestino.add(0, 1, 0);
-        
+        Location locDestino = destinatario.getLocation().clone().add(0, 1, 0);
         long delayTicks = (long) this.tiempoEntrega * 20L;
 
         Bukkit.getScheduler().runTaskLater(this, new Runnable() {
@@ -111,28 +108,18 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
                     mensajero.setCustomName("§6Mensajero Real");
                     mensajero.setCustomNameVisible(true);
 
-                    // Desactivar la persistencia para evitar que Arclight lo proteja de ser borrado
-                    if (mensajero instanceof LivingEntity) {
-                        LivingEntity living = (LivingEntity) mensajero;
-                        living.setRemoveWhenFarAway(true);
-                        living.setCanPickupItems(false);
-                    }
-
                     destinatario.sendMessage("§a[CuervoMail] §fHas recibido una carta: §e" + mensaje);
 
-                    // Espera 3 segundos (60 ticks) y fuerza la eliminación total
+                    // Espera 3 segundos (60 ticks) y elimina la entidad con comandos de la consola
                     Bukkit.getScheduler().runTaskLater(CuervoMail.this, new Runnable() {
                         @Override
                         public void run() {
                             if (mensajero != null) {
-                                // 1. Mover fuera del mapa por si acaso
-                                mensajero.teleport(locDestino.clone().add(0, -500, 0));
-                                // 2. Forzar remoción directa
+                                String uuid = mensajero.getUniqueId().toString();
+                                // Ejecutar comandos directo de consola para forzar eliminación total
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "tp " + uuid + " 0 -500 0");
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "kill " + uuid);
                                 mensajero.remove();
-                                // 3. Forzar muerte limpia si la entidad sigue viva
-                                if (mensajero instanceof LivingEntity) {
-                                    ((LivingEntity) mensajero).setHealth(0.0);
-                                }
                             }
                         }
                     }, 60L);
