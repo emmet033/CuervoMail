@@ -111,19 +111,28 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
                     mensajero.setCustomName("§6Mensajero Real");
                     mensajero.setCustomNameVisible(true);
 
-                    // Si es una entidad viva, quitamos la persistencia para que se pueda borrar sin problemas
+                    // Desactivar la persistencia para evitar que Arclight lo proteja de ser borrado
                     if (mensajero instanceof LivingEntity) {
-                        ((LivingEntity) mensajero).setRemoveWhenFarAway(true);
+                        LivingEntity living = (LivingEntity) mensajero;
+                        living.setRemoveWhenFarAway(true);
+                        living.setCanPickupItems(false);
                     }
 
                     destinatario.sendMessage("§a[CuervoMail] §fHas recibido una carta: §e" + mensaje);
 
-                    // Espera 3 segundos (60 ticks) y elimina la entidad
+                    // Espera 3 segundos (60 ticks) y fuerza la eliminación total
                     Bukkit.getScheduler().runTaskLater(CuervoMail.this, new Runnable() {
                         @Override
                         public void run() {
                             if (mensajero != null) {
-                                mensajero.remove(); // Elimina la entidad del mundo
+                                // 1. Mover fuera del mapa por si acaso
+                                mensajero.teleport(locDestino.clone().add(0, -500, 0));
+                                // 2. Forzar remoción directa
+                                mensajero.remove();
+                                // 3. Forzar muerte limpia si la entidad sigue viva
+                                if (mensajero instanceof LivingEntity) {
+                                    ((LivingEntity) mensajero).setHealth(0.0);
+                                }
                             }
                         }
                     }, 60L);
