@@ -1,0 +1,9 @@
+# Configuración de CuervoMail
+
+# Tiempo de espera (en segundos) para que llegue el animal mensajero
+tiempo-entrega-segundos: 10
+
+# Configuración del objeto requerido para enviar la carta
+item-requerido:
+  material: "PAPER"   # Nombre exacto del material en Bukkit/Spigot (ej: PAPER, FEATHER, MAP)
+  cantidad: 1         # Cantidad consumida al enviar
