@@ -1,13 +1,20 @@
 # Configuración de CuervoMail
 
-# Tiempo de espera (en segundos) para que llegue el animal mensajero
+# Tiempo de espera (en segundos) para que llegue la carta
 tiempo-entrega-segundos: 10
 
-# Entidad que entregará la carta (Ejemplos: PARROT, BAT, ALLAY, BEE, PHANTOM)
-# Revisa los nombres exactos del EntityType de Spigot/Bukkit
-entidad-mensajera: "PARROT"
+# Tiempo de recarga / cooldown entre envíos (en segundos) por jugador
+cooldown-segundos: 30
+
+# Sonido de Minecraft que sonará al recibir la carta
+# Revisa los nombres exactos de org.bukkit.Sound (ej: ENTITY_PARROT_AMBIENT, ENTITY_BAT_TAKEOFF, ENTITY_ALLAY_ITEM_GIVEN, BLOCK_NOTE_BLOCK_BELL, UI_TOAST_CHALLENGE_COMPLETE)
+sonido-entrega: "ENTITY_PARROT_AMBIENT"
+
+# Volumen y tono del sonido
+sonido-volumen: 1.0
+sonido-tono: 1.0
 
 # Configuración del objeto requerido para enviar la carta
 item-requerido:
-  material: "PAPER"   # Material exacto (PAPER, FEATHER, MAP, etc.)
-  cantidad: 1         # Cantidad consumida
+  material: "PAPER"
+  cantidad: 1
