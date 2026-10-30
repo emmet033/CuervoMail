@@ -1,20 +1,39 @@
 # Configuración de CuervoMail
 
-# Tiempo de espera (en segundos) para que llegue la carta
-tiempo-entrega-segundos: 10
-
-# Tiempo de recarga / cooldown entre envíos (en segundos) por jugador
+# Cooldown general entre envíos (en segundos) por jugador
 cooldown-segundos: 30
 
-# Sonido de Minecraft que sonará al recibir la carta
-# Revisa los nombres exactos de org.bukkit.Sound (ej: ENTITY_PARROT_AMBIENT, ENTITY_BAT_TAKEOFF, ENTITY_ALLAY_ITEM_GIVEN, BLOCK_NOTE_BLOCK_BELL, UI_TOAST_CHALLENGE_COMPLETE)
-sonido-entrega: "ENTITY_PARROT_AMBIENT"
+# Velocidad del cuervo: Bloques que recorre por segundo
+# (Ejemplo: a 5.0 bloques/seg, 100 bloques de distancia tardan 20 segundos)
+bloques-por-segundo: 5.0
 
-# Volumen y tono del sonido
+# Tiempo fijo (en segundos) si los jugadores están en mundos distintos (ej. Overworld y Nether)
+tiempo-entre-mundos-segundos: 20
+
+# Sonido de Minecraft que sonará al recibir la carta
+sonido-entrega: "ENTITY_PARROT_AMBIENT"
 sonido-volumen: 1.0
 sonido-tono: 1.0
 
-# Configuración del objeto requerido para enviar la carta
-item-requerido:
-  material: "PAPER"
+# Configuración del envío individual normal (/cuervo enviar)
+envio-individual:
+  item-requerido: "PAPER"
   cantidad: 1
+
+# Configuración para el envío masivo de jugadores (/cuervomasivo)
+envio-masivo:
+  cooldown-segundos: 120
+  item-requerido: "PAPER"
+  escalas:
+    rango-1:
+      min-jugadores: 1
+      max-jugadores: 5
+      cantidad-requerida: 3
+    rango-2:
+      min-jugadores: 6
+      max-jugadores: 10
+      cantidad-requerida: 7
+    rango-3:
+      min-jugadores: 11
+      max-jugadores: 999
+      cantidad-requerida: 17
