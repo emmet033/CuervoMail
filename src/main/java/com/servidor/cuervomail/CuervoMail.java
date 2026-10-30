@@ -42,13 +42,12 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
         saveDefaultConfig();
         cargarConfiguracion();
 
-        // Registrar los comandos
         if (getCommand("cuervo") != null) getCommand("cuervo").setExecutor(this);
         if (getCommand("cuervostaff") != null) getCommand("cuervostaff").setExecutor(this);
         if (getCommand("cuervomasivo") != null) getCommand("cuervomasivo").setExecutor(this);
         if (getCommand("cuervomasivostaff") != null) getCommand("cuervomasivostaff").setExecutor(this);
 
-        getLogger().info("CuervoMail v1.0 activado correctamente.");
+        getLogger().info("CuervoMail activado correctamente.");
     }
 
     public void cargarConfiguracion() {
@@ -141,13 +140,13 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
             int tiempoEspera = calcularTiempoEntrega(jugador.getLocation(), destinatario.getLocation());
             jugador.sendMessage(ChatColor.GREEN + "¡Carta enviada! Llegará en " + tiempoEspera + " segundos.");
 
-            programarEntrega(destinatario, mensaje, tiempoEspera);
+            programarEntregaIndividual(destinatario, mensaje, tiempoEspera);
             return true;
         }
         return false;
     }
 
-    // 2. /cuervostaff <jugador> <mensaje> (Sin cooldown, sin costo, inmediato)
+    // 2. /cuervostaff <jugador> <mensaje> (Staff individual inmediato)
     private boolean procesarCuervoStaff(CommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.sendMessage(ChatColor.RED + "Uso: /cuervostaff <jugador> <mensaje>");
@@ -161,12 +160,12 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
         }
 
         String mensaje = unirArgumentos(args, 1);
-        entregarCartaInmediata(destinatario, "§c[CuervoStaff] §f" + mensaje);
-        sender.sendMessage(ChatColor.GREEN + "¡Carta de staff entregada inmediatamente a " + destinatario.getName() + "!");
+        entregarCartaIndividualInmediata(destinatario, mensaje);
+        sender.sendMessage(ChatColor.GREEN + "¡Carta enviada inmediatamente a " + destinatario.getName() + "!");
         return true;
     }
 
-    // 3. /cuervomasivo <mensaje> (Con costo escalonado por cantidad de jugadores y cooldown)
+    // 3. /cuervomasivo <mensaje> (Masivo normal)
     private boolean procesarCuervoMasivo(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "Solo los jugadores pueden usar este comando.");
@@ -203,17 +202,17 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
         cooldownsMasivos.put(uuid, tiempoActual);
 
         String mensaje = unirArgumentos(args, 0);
-        jugador.sendMessage(ChatColor.GREEN + "¡Envío masivo iniciado! Enviando carta a los " + conectados + " jugadores...");
+        jugador.sendMessage(ChatColor.GREEN + "¡Envío masivo iniciado! Enviando mensajeros a los " + conectados + " jugadores...");
 
         for (Player destinatario : Bukkit.getOnlinePlayers()) {
             int tiempoEspera = calcularTiempoEntrega(jugador.getLocation(), destinatario.getLocation());
-            programarEntrega(destinatario, "§e[CuervoMasivo] §f" + mensaje, tiempoEspera);
+            programarEntregaMasiva(destinatario, mensaje, tiempoEspera);
         }
 
         return true;
     }
 
-    // 4. /cuervomasivostaff <mensaje> (Sin costo, sin cooldown, inmediato a todos)
+    // 4. /cuervomasivostaff <mensaje> (Staff masivo inmediato)
     private boolean procesarCuervoMasivoStaff(CommandSender sender, String[] args) {
         if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Uso: /cuervomasivostaff <mensaje>");
@@ -222,14 +221,14 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
 
         String mensaje = unirArgumentos(args, 0);
         for (Player destinatario : Bukkit.getOnlinePlayers()) {
-            entregarCartaInmediata(destinatario, "§c[CuervoMasivoStaff] §f" + mensaje);
+            entregarCartaMasivaInmediata(destinatario, mensaje);
         }
 
-        sender.sendMessage(ChatColor.GREEN + "¡Mensaje masivo de staff entregado inmediatamente a todos los jugadores!");
+        sender.sendMessage(ChatColor.GREEN + "¡Mensaje masivo entregado inmediatamente a todos los jugadores!");
         return true;
     }
 
-    // Métodos auxiliares
+    // Métodos de cálculo y entrega
     private int calcularTiempoEntrega(Location origen, Location destino) {
         if (origen.getWorld() == null || destino.getWorld() == null || !origen.getWorld().equals(destino.getWorld())) {
             return this.tiempoEntreMundos;
@@ -237,7 +236,7 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
 
         double distancia = origen.distance(destino);
         int tiempo = (int) Math.round(distancia / this.bloquesPorSegundo);
-        return Math.max(1, tiempo); // Como mínimo 1 segundo de espera
+        return Math.max(1, tiempo);
     }
 
     private int obtenerPapelesRequeridosMasivo(int conectados) {
@@ -254,15 +253,28 @@ public class CuervoMail extends JavaPlugin implements CommandExecutor {
         return 3;
     }
 
-    private void programarEntrega(Player destinatario, String mensaje, int segundosEspera) {
+    private void programarEntregaIndividual(Player destinatario, String mensaje, int segundosEspera) {
         long delayTicks = segundosEspera * 20L;
-        Bukkit.getScheduler().runTaskLater(this, () -> entregarCartaInmediata(destinatario, mensaje), delayTicks);
+        Bukkit.getScheduler().runTaskLater(this, () -> entregarCartaIndividualInmediata(destinatario, mensaje), delayTicks);
     }
 
-    private void entregarCartaInmediata(Player destinatario, String mensaje) {
+    private void programarEntregaMasiva(Player destinatario, String mensaje, int segundosEspera) {
+        long delayTicks = segundosEspera * 20L;
+        Bukkit.getScheduler().runTaskLater(this, () -> entregarCartaMasivaInmediata(destinatario, mensaje), delayTicks);
+    }
+
+    // Mensajes ambientados al recibir la carta
+    private void entregarCartaIndividualInmediata(Player destinatario, String mensaje) {
         if (destinatario.isOnline()) {
             destinatario.playSound(destinatario.getLocation(), sonidoEntrega, sonidoVolumen, sonidoTono);
-            destinatario.sendMessage("§a[CuervoMail] §fHas recibido una carta: " + mensaje);
+            destinatario.sendMessage("§7Un cuervo desciende en tu hombro dejando caer una carta: §f" + mensaje);
+        }
+    }
+
+    private void entregarCartaMasivaInmediata(Player destinatario, String mensaje) {
+        if (destinatario.isOnline()) {
+            destinatario.playSound(destinatario.getLocation(), sonidoEntrega, sonidoVolumen, sonidoTono);
+            destinatario.sendMessage("§7Se ve llegar una bandada de cuervos trayendo un mensaje: §f" + mensaje);
         }
     }
 
