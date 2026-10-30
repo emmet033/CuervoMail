@@ -1,9 +1,30 @@
 name: CuervoMail
 version: 1.0
 main: com.servidor.cuervomail.CuervoMail
-api-version: 1.20
+api-version: 1.18
 commands:
   cuervo:
-    description: Envía un cuervo mensajero compatible con Archlight.
+    description: Envia una carta a un jugador.
     usage: /cuervo enviar <jugador> <mensaje>
-    permission: cuervomail.use
+  cuervostaff:
+    description: Envio inmediato e individual de staff sin costo ni cooldown.
+    usage: /cuervostaff <jugador> <mensaje>
+    permission: cuervomail.staff
+  cuervomasivo:
+    description: Envia una carta masiva a todos los jugadores conectados consumiendo papel.
+    usage: /cuervomasivo <mensaje>
+    permission: cuervomail.masivo
+  cuervomasivostaff:
+    description: Envio masivo de staff a todos los jugadores sin costo ni cooldown.
+    usage: /cuervomasivostaff <mensaje>
+    permission: cuervomail.masivostaff
+permissions:
+  cuervomail.staff:
+    description: Permite usar /cuervostaff
+    default: op
+  cuervomail.masivo:
+    description: Permite usar /cuervomasivo
+    default: true
+  cuervomail.masivostaff:
+    description: Permite usar /cuervomasivostaff
+    default: op
